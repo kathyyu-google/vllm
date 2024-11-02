@@ -183,7 +183,7 @@ def resolve_chat_template_content_format(
 
     logger.info(
         "Detected the chat template content format to be '%s'. "
-        "Set `--chat-template-content-format` to explicitly specify this.",
+        "You can set `--chat-template-content-format` to override this.",
         detected_format,
     )
 
