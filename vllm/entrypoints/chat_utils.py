@@ -154,6 +154,7 @@ def _resolve_chat_template_content_format(
     else:
         tokenizer_chat_template = None
 
+    jinja_text: Optional[str]
     if isinstance(tokenizer_chat_template, str) and chat_template is None:
         jinja_text = tokenizer_chat_template
     if (isinstance(tokenizer_chat_template, dict)
@@ -162,8 +163,8 @@ def _resolve_chat_template_content_format(
     else:
         jinja_text = load_chat_template(chat_template, is_literal=True)
 
-    detected_format = ("string" if jinja_text is None
-                       else _detect_chat_template_content_format(jinja_text))
+    detected_format = ("string" if jinja_text is None else
+                       _detect_chat_template_content_format(jinja_text))
 
     return detected_format if given_format == "auto" else given_format
 
