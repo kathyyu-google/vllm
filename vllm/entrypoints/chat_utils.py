@@ -8,7 +8,6 @@ from pathlib import Path
 from typing import (Any, Awaitable, Callable, Dict, Generic, Iterable, List,
                     Literal, Mapping, Optional, Tuple, TypeVar, Union, cast)
 
-import jinja2
 import jinja2.nodes
 import transformers.utils.chat_template_utils as hf_chat_utils
 # yapf conflicts with isort for this block
