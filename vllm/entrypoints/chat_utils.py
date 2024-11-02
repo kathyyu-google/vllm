@@ -164,7 +164,7 @@ def _resolve_chat_template_content_format(
         jinja_text = load_chat_template(chat_template, is_literal=True)
 
     detected_format = ("string" if jinja_text is None else
-                       _detect_chat_template_content_format(jinja_text))
+                       _detect_content_format(jinja_text))
 
     return detected_format if given_format == "auto" else given_format
 
@@ -780,10 +780,9 @@ def _iter_nodes_define_content_item(chat_template_ast: jinja2.nodes.Template):
             yield loop_iter, loop_target.name
 
 
-def _detect_chat_template_content_format(
-        chat_template: str) -> _ChatTemplateContentFormat:
-    jinjacompiled = hf_chat_utils._compile_jinja_template(chat_template)
-    jinja_ast = jinjacompiled.environment.parse(chat_template)
+def _detect_content_format(chat_template: str) -> _ChatTemplateContentFormat:
+    jinja_compiled = hf_chat_utils._compile_jinja_template(chat_template)
+    jinja_ast = jinja_compiled.environment.parse(chat_template)
 
     try:
         next(_iter_nodes_define_content_item(jinja_ast))
