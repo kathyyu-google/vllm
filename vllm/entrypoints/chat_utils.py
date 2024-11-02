@@ -182,7 +182,7 @@ def resolve_chat_template_content_format(
 
     logger.info(
         "Detected the chat template content format to be '%s'. "
-        "Set `--chat-template-content-format` to explicitly specifiy this.",
+        "Set `--chat-template-content-format` to explicitly specify this.",
         detected_format,
     )
 
@@ -190,8 +190,8 @@ def resolve_chat_template_content_format(
         logger.warning(
             "You specified `--chat-template-content-format %s` "
             "which is different from the detected format '%s'. "
-            "To help us improve automatic detection, please consider "
-            "opening a GitHub issue at: "
+            "If our automatic detection is incorrect, please consider "
+            "opening a GitHub issue so that we can improve it: "
             "https://github.com/vllm-project/vllm/issues/new/choose",
             given_format,
             detected_format,
