@@ -743,7 +743,7 @@ class LLM:
                 generation, if any.
 
         Returns:
-            A list of `EmbeddingRequestOutput` objects containing the
+            A list of ``EmbeddingRequestOutput`` objects containing the
             generated embeddings in the same order as the input prompts.
 
         Note:
