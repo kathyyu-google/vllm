@@ -760,8 +760,7 @@ def test_resolve_content_format_hf_defined(model, expected_format):
      ("tool_chat_template_internlm2_tool.jinja", "string"),
      ("tool_chat_template_llama3.1_json.jinja", "string"),
      ("tool_chat_template_llama3.2_json.jinja", "string"),
-     # Broken: Cannot parse
-     # ("tool_chat_template_mistral_parallel.jinja", "string"),
+     ("tool_chat_template_mistral_parallel.jinja", "string"),
      ("tool_chat_template_mistral.jinja", "string")],
 )
 # yapf: enable

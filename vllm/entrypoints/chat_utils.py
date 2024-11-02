@@ -164,7 +164,7 @@ def _resolve_chat_template_content_format(
         jinja_text = load_chat_template(chat_template, is_literal=True)
 
     detected_format = ("string" if jinja_text is None else
-                       _detect_content_format(jinja_text))
+                       _detect_content_format(jinja_text, default="string"))
 
     return detected_format if given_format == "auto" else given_format
 
@@ -738,19 +738,35 @@ def parse_chat_messages_futures(
     return conversation, mm_tracker.all_mm_data()
 
 
+def _is_var_access(node: jinja2.nodes.Node, varname: str) -> bool:
+    if isinstance(node, jinja2.nodes.Name):
+        return node.ctx == "load" and node.name == varname
+
+    return False
+
+
+def _is_attr_access(node: jinja2.nodes.Node, varname: str, key: str) -> bool:
+    if isinstance(node, jinja2.nodes.Getitem):
+        return (node.ctx == "load" and _is_var_access(node.node, varname)
+                and isinstance(node.arg, jinja2.nodes.Const)
+                and node.arg.value == key)
+
+    if isinstance(node, jinja2.nodes.Getattr):
+        return (node.ctx == "load" and _is_var_access(node.node, varname)
+                and node.attr == key)
+
+    return False
+
+
 def _iter_nodes_define_message(chat_template_ast: jinja2.nodes.Template):
     # Search for {%- for message in messages -%} loops
     for loop_ast in chat_template_ast.find_all(jinja2.nodes.For):
         loop_iter = loop_ast.iter
-        if not (isinstance(loop_iter, jinja2.nodes.Name)
-                and loop_iter.ctx == "load" and loop_iter.name == "messages"):
-            continue
-
         loop_target = loop_ast.target
-        if not isinstance(loop_target, jinja2.nodes.Name):
-            continue
 
-        yield loop_ast, loop_target.name
+        if _is_var_access(loop_iter, "messages"):
+            assert isinstance(loop_target, jinja2.nodes.Name)
+            yield loop_ast, loop_target.name
 
 
 def _iter_nodes_define_content_item(chat_template_ast: jinja2.nodes.Template):
@@ -758,31 +774,24 @@ def _iter_nodes_define_content_item(chat_template_ast: jinja2.nodes.Template):
         # Search for {%- for content in message['content'] -%} loops
         for loop_ast in node.find_all(jinja2.nodes.For):
             loop_iter = loop_ast.iter
-            if not (isinstance(loop_iter, jinja2.nodes.Getitem)
-                    and loop_iter.ctx == "load"):
-                continue
-
-            getitem_src = loop_iter.node
-            if not (isinstance(getitem_src, jinja2.nodes.Name)
-                    and getitem_src.ctx == "load"
-                    and getitem_src.name == message_varname):
-                continue
-
-            getitem_idx = loop_iter.arg
-            if not (isinstance(getitem_idx, jinja2.nodes.Const)
-                    and getitem_idx.value == "content"):
-                continue
-
             loop_target = loop_ast.target
-            if not isinstance(loop_target, jinja2.nodes.Name):
-                continue
 
-            yield loop_iter, loop_target.name
+            if _is_attr_access(loop_iter, message_varname, "content"):
+                assert isinstance(loop_target, jinja2.nodes.Name)
+                yield loop_iter, loop_target.name
 
 
-def _detect_content_format(chat_template: str) -> _ChatTemplateContentFormat:
-    jinja_compiled = hf_chat_utils._compile_jinja_template(chat_template)
-    jinja_ast = jinja_compiled.environment.parse(chat_template)
+def _detect_content_format(
+    chat_template: str,
+    *,
+    default: _ChatTemplateContentFormat,
+) -> _ChatTemplateContentFormat:
+    try:
+        jinja_compiled = hf_chat_utils._compile_jinja_template(chat_template)
+        jinja_ast = jinja_compiled.environment.parse(chat_template)
+    except Exception:
+        logger.exception("Error when compiling Jinja template")
+        return default
 
     try:
         next(_iter_nodes_define_content_item(jinja_ast))
