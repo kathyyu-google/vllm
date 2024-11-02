@@ -551,8 +551,8 @@ class LLM:
             add_generation_prompt: If True, adds a generation template
                 to each message.
             continue_final_message: If True, continues the final message in
-                the conversation instead of starting a new one. Cannot be ``True``
-                if ``add_generation_prompt`` is also ``True``.
+                the conversation instead of starting a new one. Cannot be
+                ``True`` if ``add_generation_prompt`` is also ``True``.
             mm_processor_kwargs: Multimodal processor kwarg overrides for this
                 chat request. Only used for offline requests.
 
