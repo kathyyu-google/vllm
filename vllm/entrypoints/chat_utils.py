@@ -169,7 +169,8 @@ def _resolve_chat_template_content_format(
 
     detected_format = _detect_chat_template_content_format(jinja_text)
     logger.info(
-        "Detected chat template content format to be '%s'",
+        "Detected the chat template content format to be '%s'. "
+        "Set `--chat-template-content-format` to explicitly specifiy this.",
         detected_format,
     )
 
