@@ -482,9 +482,17 @@ class PiecewiseBackend:
 
             compilation_counter.num_cudagraph_caputured += 1
 
+            entry.buffer_addresses = [x.data_ptr() for x in args if isinstance(x, torch.Tensor)]
             entry.cudagraph = cudagraph
             return entry.output
 
+        i = 0
+        for x in args:
+            if not isinstance(x, torch.Tensor):
+                continue
+            if x.data_ptr() != entry.buffer_addresses[i]:
+                print(f"mismatch at {i=} {x.data_ptr()} != {entry.buffer_addresses[i]}")
+            i += 1
         entry.cudagraph.replay()
         return entry.output
 
