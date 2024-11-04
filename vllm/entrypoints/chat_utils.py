@@ -163,27 +163,32 @@ def _is_attr_access(node: jinja2.nodes.Node, varname: str, key: str) -> bool:
     return False
 
 
+def _iter_self_and_descendants(node: jinja2.nodes.Node):
+    yield node
+    yield from node.find_all(jinja2.nodes.Node)
+
+
 def _iter_nodes_define_message(chat_template_ast: jinja2.nodes.Template):
     # Search for {%- for message in messages -%} loops
     for loop_ast in chat_template_ast.find_all(jinja2.nodes.For):
-        loop_iter = loop_ast.iter
         loop_target = loop_ast.target
 
-        if _is_var_access(loop_iter, "messages"):
-            assert isinstance(loop_target, jinja2.nodes.Name)
-            yield loop_ast, loop_target.name
+        for loop_iter_desc in _iter_self_and_descendants(loop_ast.iter):
+            if _is_var_access(loop_iter_desc, "messages"):
+                assert isinstance(loop_target, jinja2.nodes.Name)
+                yield loop_ast, loop_target.name
 
 
 def _iter_nodes_define_content_item(chat_template_ast: jinja2.nodes.Template):
     for node, message_varname in _iter_nodes_define_message(chat_template_ast):
         # Search for {%- for content in message['content'] -%} loops
         for loop_ast in node.find_all(jinja2.nodes.For):
-            loop_iter = loop_ast.iter
             loop_target = loop_ast.target
 
-            if _is_attr_access(loop_iter, message_varname, "content"):
-                assert isinstance(loop_target, jinja2.nodes.Name)
-                yield loop_iter, loop_target.name
+            for loop_iter_desc in _iter_self_and_descendants(loop_ast.iter):
+                if _is_attr_access(loop_iter_desc, message_varname, "content"):
+                    assert isinstance(loop_target, jinja2.nodes.Name)
+                    yield loop_iter_desc, loop_target.name
 
 
 def _detect_content_format(
